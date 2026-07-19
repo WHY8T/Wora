@@ -1,0 +1,128 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 24 12% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 12% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 12% 12%;
+    --primary: 217 91% 45%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 214 25% 93%;
+    --secondary-foreground: 222 20% 18%;
+    --muted: 214 25% 93%;
+    --muted-foreground: 216 12% 42%;
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 20% 16%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 20% 87%;
+    --input: 214 20% 87%;
+    --ring: 217 91% 45%;
+    --radius: 0.75rem;
+    --sidebar-background: 214 30% 95%;
+    --sidebar-foreground: 216 12% 38%;
+    --sidebar-primary: 217 91% 45%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 214 32% 90%;
+    --sidebar-accent-foreground: 222 20% 16%;
+    --sidebar-border: 214 20% 88%;
+    --sidebar-ring: 217 91% 45%;
+  }
+
+  .dark {
+    --background: 24 14% 8%;
+    --foreground: 38 20% 93%;
+    --card: 26 12% 11%;
+    --card-foreground: 38 20% 93%;
+    --popover: 26 12% 11%;
+    --popover-foreground: 38 20% 93%;
+    --primary: 213 94% 62%;
+    --primary-foreground: 222 47% 10%;
+    --secondary: 217 15% 16%;
+    --secondary-foreground: 210 30% 93%;
+    --muted: 217 15% 16%;
+    --muted-foreground: 216 10% 58%;
+    --accent: 217 15% 17%;
+    --accent-foreground: 210 30% 93%;
+    --destructive: 0 62% 42%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 217 12% 18%;
+    --input: 217 12% 18%;
+    --ring: 213 94% 62%;
+    --sidebar-background: 217 20% 10%;
+    --sidebar-foreground: 216 10% 60%;
+    --sidebar-primary: 213 94% 62%;
+    --sidebar-primary-foreground: 222 47% 10%;
+    --sidebar-accent: 217 15% 16%;
+    --sidebar-accent-foreground: 210 30% 93%;
+    --sidebar-border: 217 12% 17%;
+    --sidebar-ring: 213 94% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+  }
+  .font-display {
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-fade-in {
+    animation: fade-in 0.3s ease both;
+  }
+  .stagger-1 { animation-delay: 0.04s; }
+  .stagger-2 { animation-delay: 0.08s; }
+  .stagger-3 { animation-delay: 0.12s; }
+  .stagger-4 { animation-delay: 0.16s; }
+  .stagger-5 { animation-delay: 0.2s; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.25);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 8px;
+  border: 2px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
