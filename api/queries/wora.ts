@@ -79,6 +79,26 @@ export async function logActivity(
     .values({ userId, type, meta: JSON.stringify(meta) });
 }
 
+/** Notification types: "follow" | "message" | "comment" | "reply". Never
+ * notifies a user about their own action. */
+export async function createNotification(
+  userId: number,
+  type: "follow" | "message" | "comment" | "reply",
+  opts: { actorId?: number | null; targetId?: number | null; meta?: Record<string, unknown> } = {},
+) {
+  const { actorId, targetId, meta } = opts;
+  if (actorId != null && actorId === userId) return; // don't notify yourself
+  await getDb()
+    .insert(schema.notifications)
+    .values({
+      userId,
+      actorId: actorId ?? null,
+      type,
+      targetId: targetId ?? null,
+      meta: meta ? JSON.stringify(meta) : null,
+    });
+}
+
 /** Community book stats: avg rating, ratings count, readers count. */
 export async function bookCommunityStats(bookId: number) {
   const db = getDb();

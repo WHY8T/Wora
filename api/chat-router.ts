@@ -4,7 +4,7 @@ import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { createRouter, authedQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { loadAuthors } from "./queries/wora";
+import { loadAuthors, createNotification } from "./queries/wora";
 
 /** Verify the current user belongs to a conversation, or throw. */
 async function requireMembership(conversationId: number, userId: number) {
@@ -215,6 +215,24 @@ export const chatRouter = createRouter({
             eq(schema.conversationMembers.userId, ctx.user.id),
           ),
         );
+
+      const otherMembers = await db
+        .select()
+        .from(schema.conversationMembers)
+        .where(
+          and(
+            eq(schema.conversationMembers.conversationId, input.conversationId),
+            sql`${schema.conversationMembers.userId} != ${ctx.user.id}`,
+          ),
+        );
+      for (const member of otherMembers) {
+        await createNotification(member.userId, "message", {
+          actorId: ctx.user.id,
+          targetId: input.conversationId,
+          meta: { preview: input.body.slice(0, 140) },
+        });
+      }
+
       return msg;
     }),
 
@@ -231,6 +249,16 @@ export const chatRouter = createRouter({
           and(
             eq(schema.conversationMembers.conversationId, input.conversationId),
             eq(schema.conversationMembers.userId, ctx.user.id),
+          ),
+        );
+      await db
+        .update(schema.notifications)
+        .set({ read: 1 })
+        .where(
+          and(
+            eq(schema.notifications.userId, ctx.user.id),
+            eq(schema.notifications.type, "message"),
+            eq(schema.notifications.targetId, input.conversationId),
           ),
         );
       return { ok: true };

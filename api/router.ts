@@ -8,6 +8,7 @@ import { postsRouter } from "./posts-router";
 import { commentsRouter } from "./comments-router";
 import { socialRouter } from "./social-router";
 import { chatRouter } from "./chat-router";
+import { notificationsRouter } from "./notifications-router";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -22,6 +23,7 @@ export const appRouter = createRouter({
   comments: commentsRouter,
   social: socialRouter,
   chat: chatRouter,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -328,3 +328,26 @@ export const messages = pgTable(
   (t) => [index("messages_conversation_idx").on(t.conversationId, t.createdAt)],
 );
 export type Message = typeof messages.$inferSelect;
+
+/* ------------------------------- notifications -------------------------------- */
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: serial("id").primaryKey(),
+    userId: fk("userId") // recipient
+      .notNull()
+      .references(() => users.id),
+    actorId: fk("actorId").references(() => users.id), // who triggered it (null for system notices)
+    type: varchar("type", { length: 32 }).notNull(), // follow | message | comment | reply
+    targetId: integer("targetId"), // conversationId / postId / commentId depending on type
+    meta: text("meta"), // JSON payload: preview text, book title, etc.
+    read: integer("read").default(0).notNull(), // 0 = unread, 1 = read
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => [
+    index("notifications_user_idx").on(t.userId, t.createdAt),
+    index("notifications_user_unread_idx").on(t.userId, t.read),
+  ],
+);
+export type Notification = typeof notifications.$inferSelect;

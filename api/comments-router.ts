@@ -4,7 +4,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { loadAuthors, myVoteMap } from "./queries/wora";
+import { loadAuthors, myVoteMap, createNotification } from "./queries/wora";
 
 export const commentsRouter = createRouter({
   byPost: publicQuery
@@ -53,6 +53,24 @@ export const commentsRouter = createRouter({
         .update(schema.posts)
         .set({ commentCount: sql`${schema.posts.commentCount} + 1` })
         .where(eq(schema.posts.id, input.postId));
+
+      if (input.parentId) {
+        const parent = await db.query.comments.findFirst({ where: eq(schema.comments.id, input.parentId) });
+        if (parent) {
+          await createNotification(parent.userId, "reply", {
+            actorId: ctx.user.id,
+            targetId: input.postId,
+            meta: { preview: input.body.slice(0, 140), postTitle: post.title },
+          });
+        }
+      } else {
+        await createNotification(post.userId, "comment", {
+          actorId: ctx.user.id,
+          targetId: input.postId,
+          meta: { preview: input.body.slice(0, 140), postTitle: post.title },
+        });
+      }
+
       return db.query.comments.findFirst({ where: eq(schema.comments.id, id) });
     }),
 

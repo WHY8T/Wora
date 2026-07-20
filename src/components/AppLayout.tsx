@@ -30,6 +30,7 @@ import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/providers/theme";
 import { UserAvatar } from "./UserAvatar";
+import { NotificationBell } from "./NotificationBell";
 import { cn } from "@/lib/utils";
 
 /** Desktop sidebar — plenty of width, so it gets every section. */
@@ -308,6 +309,7 @@ export default function AppLayout() {
           </div>
           <div className="flex flex-1 items-center justify-end gap-1 sm:flex-none sm:gap-2">
             <MobileSearchButton />
+            <NotificationBell />
             <ThemeToggle />
             <UserMenu />
           </div>

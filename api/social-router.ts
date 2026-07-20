@@ -4,7 +4,7 @@ import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { loadAuthors, logActivity, parseJson, publicUser } from "./queries/wora";
+import { loadAuthors, logActivity, parseJson, publicUser, createNotification } from "./queries/wora";
 
 export const socialRouter = createRouter({
   follow: authedQuery
@@ -22,6 +22,7 @@ export const socialRouter = createRouter({
           target: [schema.follows.followerId, schema.follows.followeeId],
         });
       await logActivity(ctx.user.id, "followed", { userId: input.userId, name: target.name });
+      await createNotification(input.userId, "follow", { actorId: ctx.user.id });
       return { ok: true };
     }),
 
