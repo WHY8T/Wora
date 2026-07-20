@@ -208,15 +208,11 @@ function MobileNavItem({
   );
 }
 
-function MobileNav({ username }: { username?: string | null }) {
+function MobileNav() {
   const location = useLocation();
-  const items = [
-    ...NAV,
-    { to: username ? `/u/${username}` : "/settings", label: "Profile", icon: UserRound },
-  ];
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch justify-around border-t bg-background/95 backdrop-blur md:hidden">
-      {items.map(({ to, label, icon: Icon }) => {
+      {NAV.map(({ to, label, icon: Icon }) => {
         const active = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
         return <MobileNavItem key={to} to={to} label={label} Icon={Icon} active={active} />;
       })}
@@ -306,7 +302,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <MobileNav username={me?.profile?.username} />
+      <MobileNav />
       <Toaster richColors position="bottom-center" />
     </div>
   );

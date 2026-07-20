@@ -1,120 +1,126 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Compass, Search as SearchIcon, UserRound } from "lucide-react";
+import { Compass, Search as SearchIcon, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/providers/trpc";
 import { BookCard } from "@/components/BookCard";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useAuth } from "@/hooks/useAuth";
+
+function PeopleResults({ q }: { q: string }) {
+  const { data, isLoading } = trpc.profile.search.useQuery(
+    { q },
+    { enabled: q.trim().length >= 1 },
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  const people = (data ?? []).filter((p) => p.username);
+
+  if (people.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+        No readers found for “{q}”. Try a different username or name.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {people.map((p) => (
+        <Link
+          key={p.id}
+          to={`/u/${p.username}`}
+          className="flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors hover:bg-accent"
+        >
+          <UserAvatar name={p.name} avatar={p.avatar} className="h-11 w-11 shrink-0" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{p.name}</p>
+            <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams();
   const q = params.get("q") ?? "";
+  const mode = params.get("type") === "people" ? "people" : "books";
   const [input, setInput] = useState(q);
-  const [tab, setTab] = useState<"books" | "people">("books");
 
   useEffect(() => setInput(q), [q]);
   useEffect(() => {
     const t = setTimeout(() => {
       const trimmed = input.trim();
-      if ((trimmed.length >= 3 || trimmed.length === 0) && trimmed !== q) {
-        setParams(trimmed ? { q: trimmed } : {});
+      if (trimmed !== q) {
+        const next: Record<string, string> = {};
+        if (trimmed) next.q = trimmed;
+        if (mode === "people") next.type = "people";
+        setParams(next);
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [input, q, setParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input]);
+
+  const setMode = (next: "books" | "people") => {
+    const nextParams: Record<string, string> = {};
+    if (q) nextParams.q = q;
+    if (next === "people") nextParams.type = "people";
+    setParams(nextParams);
+  };
 
   const { data, isLoading, isFetching } = trpc.books.search.useQuery(
     { q, startIndex: 0 },
-    { enabled: tab === "books" && q.trim().length >= 3, placeholderData: (prev) => prev },
+    { enabled: mode === "books" && q.trim().length >= 3, placeholderData: (prev) => prev },
   );
-  const { data: trending } = trpc.books.trending.useQuery(undefined, { enabled: !q });
-
-  const { user } = useAuth();
-  const utils = trpc.useUtils();
-  const { data: people, isLoading: peopleLoading } = trpc.profile.search.useQuery(
-    { q: q.trim() },
-    { enabled: tab === "people" && q.trim().length >= 1 },
-  );
-  const follow = trpc.social.follow.useMutation({
-    onSuccess: () => {
-      utils.social.suggestions.invalidate();
-      utils.social.feed.invalidate();
-    },
-  });
+  const { data: trending } = trpc.books.trending.useQuery(undefined, { enabled: mode === "books" && !q });
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-up">
-      <div className="relative mb-6 max-w-xl">
-        <SearchIcon size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={tab === "books" ? "Search by title, author, or genre…" : "Search by username or name…"}
-          className="h-11 pl-10 text-base"
-          autoFocus
-        />
-      </div>
-
-      {q ? (
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "books" | "people")} className="mb-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative max-w-xl flex-1">
+          <SearchIcon size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={mode === "people" ? "Search readers by username or name…" : "Search by title, author, or genre…"}
+            className="h-11 pl-10 text-base"
+            autoFocus
+          />
+        </div>
+        <Tabs value={mode} onValueChange={(v) => setMode(v as "books" | "people")}>
           <TabsList>
-            <TabsTrigger value="books">Books</TabsTrigger>
-            <TabsTrigger value="people">People</TabsTrigger>
+            <TabsTrigger value="books" className="gap-1.5">
+              <Compass size={14} /> Books
+            </TabsTrigger>
+            <TabsTrigger value="people" className="gap-1.5">
+              <Users size={14} /> People
+            </TabsTrigger>
           </TabsList>
         </Tabs>
-      ) : null}
+      </div>
 
-      {tab === "people" && q ? (
-        <section>
-          <div className="mb-4 text-sm text-muted-foreground">
-            {peopleLoading ? "Searching…" : `${people?.length ?? 0} people found for "${q}"`}
+      {mode === "people" ? (
+        !q ? (
+          <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+            Type a username or name to find friends and other readers.
           </div>
-          <div className="space-y-1">
-            {peopleLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-lg" />
-              ))
-              : (people ?? []).map((p) => (
-                <div key={p.id} className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary/50">
-                  <Link
-                    to={p.username ? `/u/${p.username}` : "#"}
-                    className="flex min-w-0 flex-1 items-center gap-3"
-                  >
-                    <UserAvatar name={p.name} avatar={p.avatar} className="h-10 w-10" />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{p.name}</span>
-                      {p.username ? (
-                        <span className="block truncate text-xs text-muted-foreground">@{p.username}</span>
-                      ) : null}
-                    </span>
-                  </Link>
-                  {user && user.id !== p.id ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={follow.isPending}
-                      onClick={() => follow.mutate({ userId: p.id })}
-                    >
-                      Follow
-                    </Button>
-                  ) : null}
-                </div>
-              ))}
-          </div>
-          {!peopleLoading && (people ?? []).length === 0 ? (
-            <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-              <UserRound size={22} className="mx-auto mb-2 text-muted-foreground" />
-              No readers found for "{q}".
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      {tab === "books" && !q ? (
+        ) : (
+          <PeopleResults q={q} />
+        )
+      ) : !q ? (
         <section>
           <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
             <Compass size={18} className="text-primary" /> Trending this week
@@ -125,7 +131,7 @@ export default function SearchPage() {
             ))}
           </div>
         </section>
-      ) : tab === "books" && q ? (
+      ) : (
         <section>
           <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
             <span>
@@ -151,7 +157,7 @@ export default function SearchPage() {
             </div>
           ) : null}
         </section>
-      ) : null}
+      )}
     </div>
   );
 }
