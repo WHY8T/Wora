@@ -1,84 +1,71 @@
 import { useEffect, useRef, useState } from "react";
+import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-declare global {
-    interface Window {
-        google?: {
-            books: {
-                load: (opts?: { language?: string }) => void;
-                setOnLoadCallback: (cb: () => void) => void;
-                DefaultViewer: new (el: HTMLElement) => {
-                    load: (volumeId: string, onError?: () => void) => void;
-                };
-            };
-        };
-    }
-}
-
-let jsapiPromise: Promise<void> | null = null;
-
-function loadGoogleJsApi(): Promise<void> {
-    if (window.google?.books) return Promise.resolve();
-    if (jsapiPromise) return jsapiPromise;
-    jsapiPromise = new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://www.google.com/books/jsapi.js";
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load Google's book viewer"));
-        document.head.appendChild(script);
-    });
-    return jsapiPromise;
-}
+const LOAD_TIMEOUT_MS = 9000;
 
 /**
- * Embeds Google's own official Books preview viewer in-page, so browsing a
+ * Embeds Google's own official Books preview widget in-page, so browsing a
  * preview never leaves the app. This still only ever shows whatever sample
  * pages Google itself makes available for that title — never the full book.
+ *
+ * Uses Google's public embeddable iframe (the same one behind the "Get HTML"
+ * embed code Google Books provides for any volume) rather than the old
+ * google.com/books/jsapi.js loader script, which is frequently blocked by ad
+ * blockers / privacy extensions and, when blocked, fails completely silently
+ * (no loading state, no error — just a blank panel).
  */
 export function GoogleBooksViewer({ volumeId }: { volumeId: string }) {
-    const containerRef = useRef<HTMLDivElement>(null);
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
-        let cancelled = false;
         setStatus("loading");
-
-        loadGoogleJsApi()
-            .then(() => {
-                if (cancelled) return;
-                window.google!.books.load();
-                window.google!.books.setOnLoadCallback(() => {
-                    if (cancelled || !containerRef.current) return;
-                    containerRef.current.innerHTML = "";
-                    const viewer = new window.google!.books.DefaultViewer(containerRef.current);
-                    viewer.load(volumeId, () => {
-                        if (!cancelled) setStatus("error");
-                    });
-                    if (!cancelled) setStatus("ready");
-                });
-            })
-            .catch(() => {
-                if (!cancelled) setStatus("error");
-            });
-
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            setStatus((s) => (s === "loading" ? "error" : s));
+        }, LOAD_TIMEOUT_MS);
         return () => {
-            cancelled = true;
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
     }, [volumeId]);
 
+    const embedUrl = `https://books.google.com/books?id=${encodeURIComponent(volumeId)}&printsec=frontcover&output=embed`;
+    const openUrl = `https://books.google.com/books?id=${encodeURIComponent(volumeId)}`;
+
     return (
         <div className="relative h-[75vh] w-full overflow-hidden rounded-lg border bg-white">
-            {status === "loading" && (
-                <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-                    Loading preview…
+            {status !== "ready" && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white p-6 text-center text-sm text-muted-foreground">
+                    {status === "loading" ? (
+                        <p>Loading preview…</p>
+                    ) : (
+                        <>
+                            <p>This preview couldn't load here.</p>
+                            <Button asChild size="sm" variant="outline">
+                                <a href={openUrl} target="_blank" rel="noopener noreferrer">
+                                    Open in Google Books
+                                    <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                                </a>
+                            </Button>
+                        </>
+                    )}
                 </div>
             )}
-            {status === "error" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-6 text-center text-sm text-muted-foreground">
-                    <p>This book doesn't have a preview available from Google.</p>
-                </div>
-            )}
-            <div ref={containerRef} className="h-full w-full" />
+            <iframe
+                key={volumeId}
+                title="Google Books preview"
+                src={embedUrl}
+                className="h-full w-full border-0"
+                onLoad={() => {
+                    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    setStatus("ready");
+                }}
+                onError={() => {
+                    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    setStatus("error");
+                }}
+            />
         </div>
     );
 }
