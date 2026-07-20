@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { and, eq, like, or, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { GENRES } from "@contracts/constants";
 import { createRouter, authedQuery, publicQuery } from "./middleware";
@@ -179,20 +179,17 @@ export const profileRouter = createRouter({
     .query(async ({ input }) => {
       const db = getDb();
       const q = `%${input.q.trim()}%`;
-      const profs = await db
-        .select()
+      // Match on username OR display name, case-insensitively — usernames are
+      // stored lowercase-only, but people type names in mixed case, and a
+      // display name like "Feriel Ghoubali" never appears in the username
+      // column at all, so searching username-only misses most real queries.
+      const rows = await db
+        .select({ user: schema.users, profile: schema.profiles })
         .from(schema.profiles)
-        .where(like(schema.profiles.username, q))
-        .limit(12);
-      if (profs.length === 0) return [];
-      const users = await db
-        .select()
-        .from(schema.users)
-        .where(
-          or(...profs.map((p) => eq(schema.users.id, p.userId))),
-        );
-      const pmap = new Map(profs.map((p) => [p.userId, p]));
-      return users.map((u) => publicUser(u, pmap.get(u.id) ?? null));
+        .innerJoin(schema.users, eq(schema.users.id, schema.profiles.userId))
+        .where(or(ilike(schema.profiles.username, q), ilike(schema.users.name, q)))
+        .limit(15);
+      return rows.map(({ user, profile }) => publicUser(user, profile));
     }),
 
   stats: publicQuery

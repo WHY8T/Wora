@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Welcome from "./pages/Welcome";
 import Search from "./pages/Search";
+import PeopleSearch from "./pages/PeopleSearch";
 import BookDetail from "./pages/BookDetail";
 import BookReader from "./pages/BookReader";
 import Communities from "./pages/Communities";
@@ -26,6 +27,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/people" element={<PeopleSearch />} />
           <Route path="/book/:externalId" element={<BookDetail />} />
           <Route path="/communities" element={<Communities />} />
           <Route path="/w/:slug" element={<CommunityDetail />} />

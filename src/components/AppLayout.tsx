@@ -12,6 +12,7 @@ import {
   Settings,
   Sun,
   UserRound,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,12 +32,26 @@ import { useTheme } from "@/providers/theme";
 import { UserAvatar } from "./UserAvatar";
 import { cn } from "@/lib/utils";
 
+/** Desktop sidebar — plenty of width, so it gets every section. */
 const NAV = [
   { to: "/", label: "Home", icon: Home },
   { to: "/search", label: "Discover", icon: Compass },
+  { to: "/people", label: "Find people", icon: Users },
   { to: "/communities", label: "Communities", icon: BookOpenText },
   { to: "/messages", label: "Messages", icon: MessageCircle },
   { to: "/shelves", label: "My Shelves", icon: LibraryBig },
+];
+
+/** Mobile bottom bar — kept to 5 icon-only slots (no wrapping/overflow), with
+ * People search as the true center item, Instagram-style. "My Shelves" and
+ * "Profile" live in the avatar menu up top instead — no room for 7 icons
+ * on a phone without them getting clipped. */
+const MOBILE_NAV = [
+  { to: "/", label: "Home", icon: Home },
+  { to: "/search", label: "Discover", icon: Compass },
+  { to: "/people", label: "Find people", icon: Users },
+  { to: "/communities", label: "Communities", icon: BookOpenText },
+  { to: "/messages", label: "Messages", icon: MessageCircle },
 ];
 
 function useUnreadBadge(to: string) {
@@ -192,13 +207,15 @@ function MobileNavItem({
   return (
     <Link
       to={to}
+      aria-label={label}
       className={cn(
-        "relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px]",
+        "relative flex min-w-0 flex-1 items-center justify-center py-1.5",
         active ? "text-primary" : "text-muted-foreground",
       )}
     >
-      <Icon size={19} />
-      {label}
+      <span className={cn("flex h-9 w-9 items-center justify-center rounded-full", active && "bg-primary/10")}>
+        <Icon size={21} />
+      </span>
       {badge ? (
         <span className="absolute right-1/4 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold text-primary-foreground">
           {badge}
@@ -212,7 +229,7 @@ function MobileNav() {
   const location = useLocation();
   return (
     <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch justify-around border-t bg-background/95 backdrop-blur md:hidden">
-      {NAV.map(({ to, label, icon: Icon }) => {
+      {MOBILE_NAV.map(({ to, label, icon: Icon }) => {
         const active = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
         return <MobileNavItem key={to} to={to} label={label} Icon={Icon} active={active} />;
       })}
