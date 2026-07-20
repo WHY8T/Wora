@@ -109,25 +109,29 @@ export default function BookDetail() {
           <div className="mt-4 space-y-3">
             <ShelveButton externalId={book.externalId} className="w-full" />
             {book.readUrl ? (
-              <Button asChild className="w-full">
-                <Link to={`/book/${book.externalId}/read`}>
-                  <BookOpenCheck className="mr-2 h-4 w-4" />
-                  {book.source === "gutendex" ? "Read free in Wora" : "Preview in Wora"}
+              <Button asChild className="h-auto w-full whitespace-normal py-2.5 text-center leading-snug">
+                <Link to={`/book/${book.externalId}/read`} className="flex items-center justify-center gap-2">
+                  <BookOpenCheck className="h-4 w-4 shrink-0" />
+                  <span>{book.source === "gutendex" ? "Read free in Wora" : "Preview in Wora"}</span>
                 </Link>
               </Button>
             ) : (
-
-              <Button asChild variant="outline" className="w-full text-muted-foreground">
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto w-full whitespace-normal py-2.5 text-center leading-snug text-muted-foreground"
+              >
                 <a
                   href={`https://www.google.com/search?tbm=bks&q=${encodeURIComponent(
                     `${book.title} ${book.authors[0] ?? ""}`,
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
                 >
-                  <BookOpenCheck className="mr-2 h-4 w-4" />
-                  Find where to read
-                  <ExternalLink className="ml-auto h-3.5 w-3.5 opacity-60" />
+                  <BookOpenCheck className="h-4 w-4 shrink-0" />
+                  <span>Find where to read</span>
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-60" />
                 </a>
               </Button>
             )}

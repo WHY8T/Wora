@@ -199,7 +199,7 @@ export default function Messages() {
   }, [conversationId, navigate]);
 
   return (
-    <div className="mx-auto -mt-5 flex h-[calc(100vh-3.5rem)] max-w-5xl overflow-hidden rounded-none border-x md:mt-0 md:h-[calc(100vh-6rem)] md:rounded-2xl md:border">
+    <div className="mx-auto -mt-5 flex h-[calc(100dvh-3.5rem-env(safe-area-inset-top,0px)-3.5rem-env(safe-area-inset-bottom,0px))] max-w-5xl overflow-hidden rounded-none border-x md:mt-0 md:h-[calc(100dvh-6rem)] md:rounded-2xl md:border">
       <div
         className={cn(
           "w-full shrink-0 overflow-y-auto border-r md:w-80",

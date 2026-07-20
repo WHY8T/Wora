@@ -37,7 +37,7 @@ function TextReaderView({ externalId }: { externalId: string }) {
 
   if (error) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
         <p className="text-lg font-medium">Can't read this one here</p>
         <p className="text-sm text-muted-foreground">{error.message}</p>
         <Button asChild variant="outline">
@@ -48,8 +48,8 @@ function TextReaderView({ externalId }: { externalId: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
+    <div className="min-h-dvh bg-background">
+      <header className="safe-top sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
         <Button asChild variant="ghost" size="icon">
           <Link to={`/book/${externalId}`}>
             <X className="h-4 w-4" />
@@ -78,7 +78,7 @@ function TextReaderView({ externalId }: { externalId: string }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 py-10">
+      <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
         {isLoading || !data ? (
           <div className="space-y-4">
             <Skeleton className="h-5 w-full" />
@@ -99,7 +99,7 @@ function TextReaderView({ externalId }: { externalId: string }) {
       </main>
 
       {data && (
-        <footer className="sticky bottom-0 flex items-center justify-between border-t bg-background/95 px-4 py-3 backdrop-blur">
+        <footer className="safe-bottom sticky bottom-0 flex items-center justify-between border-t bg-background/95 px-4 py-3 backdrop-blur">
           <Button variant="outline" disabled={page <= 0} onClick={() => goTo(page - 1)}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             Prev
@@ -126,8 +126,8 @@ function GoogleReaderView({ externalId }: { externalId: string }) {
   const { data, isLoading } = trpc.books.byExternalId.useQuery({ externalId });
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
+    <div className="min-h-dvh bg-background">
+      <header className="safe-top sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
         <Button asChild variant="ghost" size="icon">
           <Link to={`/book/${externalId}`}>
             <X className="h-4 w-4" />

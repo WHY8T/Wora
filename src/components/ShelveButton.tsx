@@ -69,9 +69,9 @@ export function ShelveButton({ externalId, compact, className }: Props) {
             e.stopPropagation();
           }}
         >
-          {current ? <Check size={16} /> : <Plus size={16} />}
-          {current ? current.name : "Shelve"}
-          <ChevronDown size={14} className="opacity-60" />
+          {current ? <Check size={16} className="shrink-0" /> : <Plus size={16} className="shrink-0" />}
+          <span className="truncate">{current ? current.name : "Shelve"}</span>
+          <ChevronDown size={14} className="shrink-0 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">

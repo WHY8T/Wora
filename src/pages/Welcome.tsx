@@ -59,7 +59,7 @@ export default function Welcome() {
   const valid = /^[a-z0-9_]{3,24}$/.test(username);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-dvh items-center justify-center p-4">
       <div className="w-full max-w-lg animate-fade-up">
         <div className="mb-8 text-center">
           <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">

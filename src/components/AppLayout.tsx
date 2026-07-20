@@ -92,6 +92,19 @@ function SearchBox() {
   );
 }
 
+/** Compact stand-in for <SearchBox> on narrow screens, where a full inline
+ * input has no room to breathe next to the logo + action icons. Routes to
+ * the dedicated Discover/Search page, which has its own full-width input. */
+function MobileSearchButton() {
+  return (
+    <Button asChild variant="ghost" size="icon" aria-label="Search" className="sm:hidden">
+      <Link to="/search">
+        <Search size={19} />
+      </Link>
+    </Button>
+  );
+}
+
 function MyCommunities() {
   const { isAuthenticated } = useAuth();
   const { data } = trpc.communities.mine.useQuery(undefined, { enabled: isAuthenticated });
@@ -153,7 +166,7 @@ function SidebarNavItem({
 
 function Sidebar() {
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r bg-sidebar-background px-3 py-4 md:block">
+    <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r bg-sidebar-background px-3 py-4 md:block">
       <nav className="space-y-0.5">
         {NAV.map(({ to, label, icon: Icon }) => (
           <SidebarNavItem key={to} to={to} label={label} Icon={Icon} />
@@ -202,7 +215,7 @@ function MobileNav({ username }: { username?: string | null }) {
     { to: username ? `/u/${username}` : "/settings", label: "Profile", icon: UserRound },
   ];
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch justify-around border-t bg-background/95 backdrop-blur md:hidden">
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch justify-around border-t bg-background/95 backdrop-blur md:hidden">
       {items.map(({ to, label, icon: Icon }) => {
         const active = to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
         return <MobileNavItem key={to} to={to} label={label} Icon={Icon} active={active} />;
@@ -260,7 +273,7 @@ export default function AppLayout() {
 
   if (isLoading || (user && meLoading)) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <div className="flex w-full max-w-md flex-col gap-3 p-6">
           <Skeleton className="h-8 w-40" />
           <Skeleton className="h-24 w-full rounded-xl" />
@@ -273,18 +286,23 @@ export default function AppLayout() {
   if (me && !me.profile) return <Navigate to="/welcome" state={{ from: location.pathname }} replace />;
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-background/90 px-3 backdrop-blur sm:px-5">
-        <Wordmark />
-        <div className="flex flex-1 justify-center px-2">
-          <SearchBox />
+    <div className="min-h-dvh">
+      <header className="safe-top sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
+        <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5">
+          <Wordmark />
+          <div className="hidden flex-1 justify-center px-2 sm:flex">
+            <SearchBox />
+          </div>
+          <div className="flex flex-1 items-center justify-end gap-1 sm:flex-none sm:gap-2">
+            <MobileSearchButton />
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </div>
-        <ThemeToggle />
-        <UserMenu />
       </header>
       <div className="flex">
         <Sidebar />
-        <main className="min-w-0 flex-1 px-3 pb-20 pt-5 sm:px-6 md:pb-10">
+        <main className="min-w-0 flex-1 px-3 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px)+1rem)] pt-5 sm:px-6 md:pb-10">
           <Outlet />
         </main>
       </div>
