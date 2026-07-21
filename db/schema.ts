@@ -359,3 +359,21 @@ export const notifications = pgTable(
   ],
 );
 export type Notification = typeof notifications.$inferSelect;
+
+/* ----------------------------- push subscriptions ------------------------------ */
+
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: serial("id").primaryKey(),
+    userId: fk("userId")
+      .notNull()
+      .references(() => users.id),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: varchar("p256dh", { length: 255 }).notNull(),
+    auth: varchar("auth", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => [index("push_subscriptions_user_idx").on(t.userId)],
+);
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;

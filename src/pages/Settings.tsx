@@ -12,8 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { GENRES } from "@contracts/constants";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Check, ImagePlus } from "lucide-react";
+import { Check, ImagePlus, Bell, BellOff, BellRing } from "lucide-react";
 import { resizeImageToDataUrl } from "@/lib/image";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -226,6 +227,68 @@ export default function Settings() {
         >
           {update.isPending ? "Saving…" : "Save changes"}
         </Button>
+      </div>
+
+      <PushNotificationSettings />
+    </div>
+  );
+}
+
+function PushNotificationSettings() {
+  const { status, enable, disable } = usePushNotifications();
+  const [busy, setBusy] = useState(false);
+
+  if (status === "unsupported") return null;
+
+  return (
+    <div className="mt-5 space-y-3 rounded-2xl border bg-card p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            {status === "on" ? <BellRing size={18} /> : <Bell size={18} />}
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Push notifications</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {status === "denied"
+                ? "Blocked in your browser/device settings — you'll need to allow notifications for Wora there first."
+                : status === "on"
+                  ? "You'll get an alert (with sound) for follow requests, messages, comments, and replies — even when Wora isn't open."
+                  : "Get notified the moment something happens, even when Wora isn't open."}
+            </p>
+          </div>
+        </div>
+        {status === "denied" ? null : (
+          <Button
+            variant={status === "on" ? "outline" : "default"}
+            size="sm"
+            className="shrink-0 gap-1.5"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                if (status === "on") await disable();
+                else await toast.promise(enable(), {
+                  loading: "Enabling…",
+                  success: "Notifications enabled",
+                  error: "Couldn't enable notifications",
+                });
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {status === "on" ? (
+              <>
+                <BellOff size={14} /> Turn off
+              </>
+            ) : (
+              <>
+                <Bell size={14} /> Enable
+              </>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

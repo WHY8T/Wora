@@ -31,6 +31,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/providers/theme";
 import { UserAvatar } from "./UserAvatar";
 import { NotificationBell } from "./NotificationBell";
+import { unlockAudioOnFirstInteraction } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 
 /** Desktop sidebar — plenty of width, so it gets every section. */
@@ -284,6 +285,16 @@ export default function AppLayout() {
     enabled: !!user,
   });
   const location = useLocation();
+
+  useEffect(() => {
+    const unlock = () => unlockAudioOnFirstInteraction();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
 
   if (isLoading || (user && meLoading)) {
     return (

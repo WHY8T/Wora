@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { Bell, Check, MessageCircle, MessageSquare, Reply, UserPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { trpc } from "@/providers/trpc";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { playNotificationChime } from "@/lib/sound";
 
 type NotificationType = "follow_request" | "follow_accepted" | "message" | "comment" | "reply";
 
@@ -154,6 +155,16 @@ export function NotificationBell() {
     const { data: unread } = trpc.notifications.unreadCount.useQuery(undefined, {
         refetchInterval: 15000,
     });
+
+    const prevCount = useRef<number | null>(null);
+    useEffect(() => {
+        const count = unread?.count;
+        if (count == null) return;
+        if (prevCount.current != null && count > prevCount.current) {
+            playNotificationChime();
+        }
+        prevCount.current = count;
+    }, [unread?.count]);
     const { data, isLoading } = trpc.notifications.list.useQuery(undefined, {
         enabled: open,
         refetchInterval: open ? 15000 : false,

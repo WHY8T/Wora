@@ -12,6 +12,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectManifest: {
+        // src/sw.ts already declares its own runtime caching/routing —
+        // nothing extra to glob in beyond the default build output.
+      },
       includeAssets: ["apple-touch-icon.png"],
       manifest: {
         name: "Wora — Book Social",
@@ -26,16 +33,6 @@ export default defineConfig({
           { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
           { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
-      workbox: {
-        // Never cache API calls — always hit the live server for data/auth
-        navigateFallbackDenylist: [/^\/api\//],
-        runtimeCaching: [
-          {
-            urlPattern: /^\/api\//,
-            handler: "NetworkOnly",
-          },
         ],
       },
     }),

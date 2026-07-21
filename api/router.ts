@@ -9,6 +9,7 @@ import { commentsRouter } from "./comments-router";
 import { socialRouter } from "./social-router";
 import { chatRouter } from "./chat-router";
 import { notificationsRouter } from "./notifications-router";
+import { pushRouter } from "./push-router";
 import { createRouter, publicQuery } from "./middleware";
 
 export const appRouter = createRouter({
@@ -24,6 +25,7 @@ export const appRouter = createRouter({
   social: socialRouter,
   chat: chatRouter,
   notifications: notificationsRouter,
+  push: pushRouter,
 });
 
 export type AppRouter = typeof appRouter;

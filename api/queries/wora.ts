@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { getDb } from "./connection";
 import type { BookSummary } from "@contracts/types";
+import { sendPushToUser } from "../lib/push";
 
 
 /** Cache a provider book into the local books table; returns the row. */
@@ -97,6 +98,54 @@ export async function createNotification(
       targetId: targetId ?? null,
       meta: meta ? JSON.stringify(meta) : null,
     });
+
+  // Fire-and-forget push — never let a push failure break the caller's mutation.
+  void sendPushNotification(userId, type, { actorId, targetId, meta }).catch((err) =>
+    console.error("sendPushNotification failed:", err),
+  );
+}
+
+async function sendPushNotification(
+  userId: number,
+  type: "follow_request" | "follow_accepted" | "message" | "comment" | "reply",
+  opts: { actorId?: number | null; targetId?: number | null; meta?: Record<string, unknown> },
+) {
+  const { actorId, targetId, meta } = opts;
+  const actor = actorId != null ? await getDb().query.users.findFirst({ where: eq(schema.users.id, actorId) }) : null;
+  const actorProfile = actorId != null ? await getProfileByUserId(actorId) : null;
+  const who = actor?.name ?? "Someone";
+  const preview = typeof meta?.preview === "string" ? ` "${(meta.preview as string).slice(0, 80)}"` : "";
+
+  const byType: Record<typeof type, { title: string; body: string; url: string }> = {
+    follow_request: {
+      title: "New follow request",
+      body: `${who} wants to follow you`,
+      url: actorProfile ? `/u/${actorProfile.username}` : "/",
+    },
+    follow_accepted: {
+      title: "Request accepted",
+      body: `${who} accepted your follow request`,
+      url: actorProfile ? `/u/${actorProfile.username}` : "/",
+    },
+    message: {
+      title: `${who} sent you a message`,
+      body: preview.trim() || "New message",
+      url: targetId ? `/messages/${targetId}` : "/messages",
+    },
+    comment: {
+      title: "New comment",
+      body: `${who} commented on your post${preview}`,
+      url: targetId ? `/post/${targetId}` : "/",
+    },
+    reply: {
+      title: "New reply",
+      body: `${who} replied to your comment${preview}`,
+      url: targetId ? `/post/${targetId}` : "/",
+    },
+  };
+
+  const { title, body, url } = byType[type];
+  await sendPushToUser(userId, { title, body, url, tag: type });
 }
 
 /** Community book stats: avg rating, ratings count, readers count. */
