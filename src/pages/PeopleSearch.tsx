@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Check, Users } from "lucide-react";
+import { Check, Clock, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,29 +10,50 @@ import { useAuth } from "@/hooks/useAuth";
 
 function FollowButton({ userId }: { userId: number }) {
     const { isAuthenticated } = useAuth();
-    const [following, setFollowing] = useState(false);
-    const follow = trpc.social.follow.useMutation({ onSuccess: () => setFollowing(true) });
-    const unfollow = trpc.social.unfollow.useMutation({ onSuccess: () => setFollowing(false) });
+    const [state, setState] = useState<"none" | "requested" | "connected">("none");
+    const follow = trpc.social.follow.useMutation({
+        onSuccess: (res) => setState(res.status === "accepted" ? "connected" : "requested"),
+    });
+    const unfollow = trpc.social.unfollow.useMutation({ onSuccess: () => setState("none") });
 
     if (!isAuthenticated) return null;
+
+    if (state === "requested") {
+        return (
+            <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="shrink-0 gap-1"
+                disabled={unfollow.isPending}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    unfollow.mutate({ userId });
+                }}
+            >
+                <Clock size={14} /> Requested
+            </Button>
+        );
+    }
 
     return (
         <Button
             type="button"
             size="sm"
-            variant={following ? "secondary" : "default"}
+            variant={state === "connected" ? "secondary" : "default"}
             className="shrink-0 gap-1"
             disabled={follow.isPending || unfollow.isPending}
             onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (following) unfollow.mutate({ userId });
+                if (state === "connected") unfollow.mutate({ userId });
                 else follow.mutate({ userId });
             }}
         >
-            {following ? (
+            {state === "connected" ? (
                 <>
-                    <Check size={14} /> Following
+                    <Check size={14} /> Connected
                 </>
             ) : (
                 "Follow"

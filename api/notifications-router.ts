@@ -23,7 +23,7 @@ export const notificationsRouter = createRouter({
 
             return rows.map((r) => ({
                 id: r.id,
-                type: r.type as "follow" | "message" | "comment" | "reply",
+                type: r.type as "follow_request" | "follow_accepted" | "message" | "comment" | "reply",
                 targetId: r.targetId,
                 meta: parseJson<Record<string, unknown>>(r.meta, {}),
                 read: r.read === 1,

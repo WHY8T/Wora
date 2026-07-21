@@ -79,11 +79,11 @@ export async function logActivity(
     .values({ userId, type, meta: JSON.stringify(meta) });
 }
 
-/** Notification types: "follow" | "message" | "comment" | "reply". Never
- * notifies a user about their own action. */
+/** Notification types: "follow_request" | "follow_accepted" | "message" |
+ * "comment" | "reply". Never notifies a user about their own action. */
 export async function createNotification(
   userId: number,
-  type: "follow" | "message" | "comment" | "reply",
+  type: "follow_request" | "follow_accepted" | "message" | "comment" | "reply",
   opts: { actorId?: number | null; targetId?: number | null; meta?: Record<string, unknown> } = {},
 ) {
   const { actorId, targetId, meta } = opts;
@@ -121,11 +121,35 @@ export async function bookCommunityStats(bookId: number) {
   };
 }
 
-export async function isFollowing(followerId: number, followeeId: number) {
-  const row = await getDb().query.follows.findFirst({
-    where: and(eq(schema.follows.followerId, followerId), eq(schema.follows.followeeId, followeeId)),
-  });
-  return !!row;
+export type Relationship = "none" | "pending_sent" | "pending_received" | "accepted";
+
+/** Relationship of `meId` looking at `otherId`'s profile:
+ * - "accepted": connected (chat is unlocked)
+ * - "pending_sent": I've requested to follow them, awaiting their response
+ * - "pending_received": they've requested to follow me — I can accept/decline
+ * - "none": no relationship either way
+ */
+export async function getRelationship(meId: number, otherId: number): Promise<Relationship> {
+  if (meId === otherId) return "none";
+  const db = getDb();
+  const [mine, theirs] = await Promise.all([
+    db.query.follows.findFirst({
+      where: and(eq(schema.follows.followerId, meId), eq(schema.follows.followeeId, otherId)),
+    }),
+    db.query.follows.findFirst({
+      where: and(eq(schema.follows.followerId, otherId), eq(schema.follows.followeeId, meId)),
+    }),
+  ]);
+  if (mine?.status === "accepted" || theirs?.status === "accepted") return "accepted";
+  if (mine?.status === "pending") return "pending_sent";
+  if (theirs?.status === "pending") return "pending_received";
+  return "none";
+}
+
+/** True once either direction between the two users is an accepted connection — this is what unlocks chat. */
+export async function isConnected(userIdA: number, userIdB: number) {
+  const rel = await getRelationship(userIdA, userIdB);
+  return rel === "accepted";
 }
 
 export async function myVoteMap(userId: number, targetType: "post" | "comment", targetIds: number[]) {

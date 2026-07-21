@@ -1,5 +1,5 @@
-import { Link, useParams } from "react-router";
-import { BookOpen, CalendarDays, MessageCircle, Music } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
+import { BookOpen, CalendarDays, Check, Clock, MessageCircle, Music, UserPlus, UserCheck2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,9 +11,11 @@ import { BookCover } from "@/components/BookCover";
 import { ActivityItem } from "@/components/ActivityItem";
 import { useAuth } from "@/hooks/useAuth";
 import { timeAgo } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export default function Profile() {
   const { username = "" } = useParams();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { data, isLoading } = trpc.profile.byUsername.useQuery({ username });
   const { data: shelves } = trpc.shelves.byUsername.useQuery({ username });
@@ -27,6 +29,12 @@ export default function Profile() {
   });
   const unfollow = trpc.social.unfollow.useMutation({
     onSuccess: () => utils.profile.byUsername.invalidate({ username }),
+  });
+  const respond = trpc.social.respondToRequest.useMutation({
+    onSuccess: () => utils.profile.byUsername.invalidate({ username }),
+  });
+  const startChat = trpc.chat.startDirect.useMutation({
+    onSuccess: (res) => navigate(`/messages/${res.conversationId}`),
   });
 
   if (isLoading) {
@@ -53,7 +61,21 @@ export default function Profile() {
     <div className="mx-auto max-w-4xl animate-fade-up">
       <div className="rounded-2xl border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-start gap-4">
-          <UserAvatar name={user.name} avatar={user.avatar} className="h-20 w-20 text-2xl" />
+          <div className="relative">
+            <UserAvatar
+              name={user.name}
+              avatar={user.avatar}
+              className={cn(
+                "h-20 w-20 text-2xl",
+                data.relationship === "accepted" && "ring-2 ring-primary ring-offset-2 ring-offset-card",
+              )}
+            />
+            {data.relationship === "accepted" && !data.isMe ? (
+              <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground">
+                <UserCheck2 size={13} />
+              </span>
+            ) : null}
+          </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-2xl font-semibold">{user.name}</h1>
             <p className="text-sm text-muted-foreground">@{user.username}</p>
@@ -90,13 +112,47 @@ export default function Profile() {
             )}
           </div>
           {isAuthenticated && !data.isMe ? (
-            <Button
-              variant={data.following ? "outline" : "default"}
-              disabled={follow.isPending || unfollow.isPending}
-              onClick={() => (data.following ? unfollow.mutate({ userId: user.id }) : follow.mutate({ userId: user.id }))}
-            >
-              {data.following ? "Following" : "Follow"}
-            </Button>
+            <div className="flex items-center gap-2">
+              {data.relationship === "accepted" ? (
+                <>
+                  <Button
+                    variant="outline"
+                    disabled={unfollow.isPending}
+                    onClick={() => unfollow.mutate({ userId: user.id })}
+                  >
+                    <UserCheck2 className="mr-1.5 h-4 w-4" /> Connected
+                  </Button>
+                  <Button disabled={startChat.isPending} onClick={() => startChat.mutate({ userId: user.id })}>
+                    <MessageCircle className="mr-1.5 h-4 w-4" /> Message
+                  </Button>
+                </>
+              ) : data.relationship === "pending_sent" ? (
+                <Button
+                  variant="outline"
+                  disabled={unfollow.isPending}
+                  onClick={() => unfollow.mutate({ userId: user.id })}
+                >
+                  <Clock className="mr-1.5 h-4 w-4" /> Requested
+                </Button>
+              ) : data.relationship === "pending_received" ? (
+                <div className="flex items-center gap-2">
+                  <Button disabled={respond.isPending} onClick={() => respond.mutate({ requesterId: user.id, accept: true })}>
+                    <Check className="mr-1.5 h-4 w-4" /> Accept
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={respond.isPending}
+                    onClick={() => respond.mutate({ requesterId: user.id, accept: false })}
+                  >
+                    <X className="mr-1.5 h-4 w-4" /> Decline
+                  </Button>
+                </div>
+              ) : (
+                <Button disabled={follow.isPending} onClick={() => follow.mutate({ userId: user.id })}>
+                  <UserPlus className="mr-1.5 h-4 w-4" /> Follow
+                </Button>
+              )}
+            </div>
           ) : null}
           {data.isMe ? (
             <Button variant="outline" asChild>

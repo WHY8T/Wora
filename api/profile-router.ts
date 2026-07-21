@@ -9,7 +9,7 @@ import {
   ensureDefaultShelves,
   getProfileByUserId,
   getProfileByUsername,
-  isFollowing,
+  getRelationship,
   publicUser,
 } from "./queries/wora";
 import { uploadAvatarImage } from "./lib/storage";
@@ -39,11 +39,11 @@ async function profileStats(userId: number) {
   const [followers] = await db
     .select({ count: sql<number>`count(*)` })
     .from(schema.follows)
-    .where(eq(schema.follows.followeeId, userId));
+    .where(and(eq(schema.follows.followeeId, userId), eq(schema.follows.status, "accepted")));
   const [following] = await db
     .select({ count: sql<number>`count(*)` })
     .from(schema.follows)
-    .where(eq(schema.follows.followerId, userId));
+    .where(and(eq(schema.follows.followerId, userId), eq(schema.follows.status, "accepted")));
   return {
     finished: Number(finished?.count ?? 0),
     reading: Number(reading?.count ?? 0),
@@ -68,9 +68,9 @@ export const profileRouter = createRouter({
       const user = await db.query.users.findFirst({ where: eq(schema.users.id, profile.userId) });
       if (!user) return null;
       const stats = await profileStats(user.id);
-      const following = ctx.user ? await isFollowing(ctx.user.id, user.id) : false;
+      const relationship = ctx.user ? await getRelationship(ctx.user.id, user.id) : "none";
       const isMe = ctx.user?.id === user.id;
-      return { user: publicUser(user, profile), readingGoal: profile.readingGoal, stats, following, isMe };
+      return { user: publicUser(user, profile), readingGoal: profile.readingGoal, stats, relationship, isMe };
     }),
 
   /** First-run onboarding: claim username + pick genres, create shelves. */

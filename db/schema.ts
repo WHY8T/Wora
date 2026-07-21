@@ -250,6 +250,8 @@ export type Vote = typeof votes.$inferSelect;
 
 /* ----------------------------------- social ----------------------------------- */
 
+export const followStatusEnum = ["pending", "accepted"] as const;
+
 export const follows = pgTable(
   "follows",
   {
@@ -260,6 +262,12 @@ export const follows = pgTable(
     followeeId: fk("followeeId")
       .notNull()
       .references(() => users.id),
+    // "pending" = a follow/connection request awaiting the followee's response;
+    // "accepted" = a live connection (chat is unlocked once accepted).
+    // Defaults to "accepted" at the column level so rows created before this
+    // request/accept flow existed remain live connections — new rows always
+    // pass status explicitly in application code.
+    status: varchar("status", { length: 16 }).default("accepted").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   (t) => [uniqueIndex("follow_uniq").on(t.followerId, t.followeeId)],

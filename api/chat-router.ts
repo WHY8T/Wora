@@ -4,7 +4,7 @@ import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import * as schema from "@db/schema";
 import { createRouter, authedQuery } from "./middleware";
 import { getDb } from "./queries/connection";
-import { loadAuthors, createNotification } from "./queries/wora";
+import { loadAuthors, createNotification, isConnected } from "./queries/wora";
 
 /** Verify the current user belongs to a conversation, or throw. */
 async function requireMembership(conversationId: number, userId: number) {
@@ -129,6 +129,12 @@ export const chatRouter = createRouter({
       const db = getDb();
       const target = await db.query.users.findFirst({ where: eq(schema.users.id, input.userId) });
       if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      if (!(await isConnected(ctx.user.id, input.userId))) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only message people once they've accepted your follow request",
+        });
+      }
 
       // Look for an existing direct conversation shared by both users.
       const mine = await db
