@@ -10,7 +10,7 @@ export async function findUserByEmail(email: string) {
     .from(schema.users)
     .where(eq(schema.users.email, email))
     .limit(1);
-  return rows.at(0);
+  return rows[0];
 }
 
 export async function findUserById(id: number) {
@@ -19,7 +19,7 @@ export async function findUserById(id: number) {
     .from(schema.users)
     .where(eq(schema.users.id, id))
     .limit(1);
-  return rows.at(0);
+  return rows[0];
 }
 
 export async function createUser(data: InsertUser) {
