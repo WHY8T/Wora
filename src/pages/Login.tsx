@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/providers/trpc";
 import { cn } from "@/lib/utils";
+import { WoraLogo } from "@/components/Logo";
 
 const FEATURES = [
   { icon: BookOpenText, title: "Track your reading", text: "Shelves for want-to-read, reading, and finished — plus yearly goals." },
@@ -109,7 +110,7 @@ export default function Login() {
       <div className="hidden w-1/2 flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
         <div className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-            <BookOpenText size={20} />
+            <WoraLogo size={24} />
           </span>
           <span className="font-display text-2xl font-semibold">Wora</span>
         </div>
@@ -142,7 +143,7 @@ export default function Login() {
         <div className="w-full max-w-sm animate-fade-up">
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <BookOpenText size={20} />
+              <WoraLogo size={24} />
             </span>
             <span className="font-display text-2xl font-semibold">Wora</span>
           </div>

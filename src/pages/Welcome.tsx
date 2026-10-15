@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { BookOpenText, Camera, Check } from "lucide-react";
+import { Camera, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { fileToAvatarDataUrl } from "@/lib/image";
 import { UserAvatar } from "@/components/UserAvatar";
+import { WoraLogo } from "@/components/Logo";
 
 export default function Welcome() {
   const { user } = useAuth({ redirectOnUnauthenticated: true });
@@ -63,7 +64,7 @@ export default function Welcome() {
       <div className="w-full max-w-lg animate-fade-up">
         <div className="mb-8 text-center">
           <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-            <BookOpenText size={28} />
+            <WoraLogo size={36} />
           </span>
           <h1 className="font-display text-3xl font-semibold">Welcome to Wora</h1>
           <p className="mt-2 text-sm text-muted-foreground">

@@ -30,6 +30,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/providers/theme";
 import { UserAvatar } from "./UserAvatar";
 import { cn } from "@/lib/utils";
+import { WoraLogo } from "@/components/Logo";
 
 const NAV = [
   { to: "/", label: "Home", icon: Home },
@@ -59,7 +60,7 @@ function Wordmark() {
   return (
     <Link to="/" className="flex items-center gap-2">
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <BookOpenText size={18} />
+        <WoraLogo size={22} />
       </span>
       <span className="font-display text-xl font-semibold tracking-tight">Wora</span>
     </Link>
