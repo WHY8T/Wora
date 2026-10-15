@@ -20,5 +20,11 @@
       "@db/*": ["./db/*"]
     }
   },
-  "include": ["api", "server", "contracts", "db"]
+  "include": ["api", "server", "contracts", "db"],
+  "exclude": [
+    "server/lib/push.ts",
+    "server/notifications-router.ts",
+    "server/push-router.ts",
+    "server/personal-books-router.ts"
+  ]
 }

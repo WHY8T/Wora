@@ -4,7 +4,7 @@ import { UserAvatar } from "./UserAvatar";
 import { BookCover } from "./BookCover";
 import { timeAgo } from "@/lib/format";
 import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../api/router";
+import type { AppRouter } from "../../server/router";
 
 type Activity = inferRouterOutputs<AppRouter>["social"]["feed"][number];
 

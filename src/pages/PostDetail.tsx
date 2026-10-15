@@ -13,7 +13,7 @@ import { timeAgo } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "../../api/router";
+import type { AppRouter } from "../../server/router";
 
 type CommentT = inferRouterOutputs<AppRouter>["comments"]["byPost"][number];
 
